@@ -2,6 +2,10 @@
 
 Assistente desktop per contabilità, bilancio, controllo di gestione e finanza: si caricano fatture, bilanci o prospetti e si ottiene un'analisi strutturata, con tabelle e punti d'attenzione.
 
+**[Prova la demo](https://andreapollastrelli95.github.io/smart-cfo-assistant/)** · Analisi rapide su documenti d'esempio, con risposte già pronte. Tutti i dati sono fittizi.
+
+![Analisi degli scostamenti nella demo](docs/demo-1.png)
+
 ![Smart CFO Assistant](docs/screenshot-1.png)
 *Esempio di risposta con dati fittizi.*
 
