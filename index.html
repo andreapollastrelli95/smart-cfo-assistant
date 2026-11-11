@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart CFO Assistant – demo</title>
+<style>
+:root{--bg:#1e1f22;--side:#252629;--card:#2b2c30;--ink:#e8e8ea;--muted:#a0a3aa;--line:#3a3c41;--blue:#1f6aa5;--accent:#4aa3ff;--warn:#f0b429}
+*{box-sizing:border-box}body{margin:0;font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+aside{background:var(--side);padding:18px 16px;border-right:1px solid var(--line)}
+aside h1{margin:0;font-size:24px}aside .sub{color:var(--muted);font-size:12px;margin-bottom:18px}
+.lbl{font-size:11px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;margin:16px 0 6px;font-weight:700}
+.box{background:var(--card);border-radius:8px;padding:10px;font-size:12.5px}.box b{display:block;font-size:13.5px}
+.qa{display:block;width:100%;text-align:left;background:none;border:0;color:var(--ink);padding:7px 6px;border-radius:6px;font:inherit;cursor:pointer}.qa:hover,.qa.on{background:#34363b}
+main{padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+section h2{margin:0 0 8px;font-size:15px}section h2 small{color:var(--muted);font-weight:400;margin-left:6px}
+.docs{display:flex;flex-wrap:wrap;gap:8px}.doc{border:1px solid var(--line);background:#232427;color:var(--ink);border-radius:8px;padding:8px 10px;cursor:pointer;font:inherit;text-align:left}
+.doc.on{border-color:var(--accent);background:#20324a}.doc small{display:block;color:var(--muted)}
+textarea{width:100%;min-height:80px;background:#1b1c1f;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;resize:vertical}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{background:var(--blue);color:#fff;border:0;border-radius:7px;padding:9px 18px;font:600 14px system-ui;cursor:pointer}.btn:disabled{opacity:.5}
+.btn.small{padding:5px 12px;font-weight:500;font-size:13px}.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+#out{min-height:280px;max-height:60vh;overflow:auto;padding:4px 6px}
+#out h2,#out h3{color:var(--accent);margin:12px 0 6px}#out table{border-collapse:collapse;margin:8px 0;font-size:13px}#out td,#out th{border:1px solid var(--line);padding:5px 9px}#out th{background:#33363c}
+#out td.n{text-align:right}#out blockquote{margin:10px 0;padding:8px 12px;border-left:3px solid var(--warn);background:#3a3420}
+.muted{color:var(--muted)}.tag{position:fixed;right:10px;bottom:10px;background:#b45309;color:#fff;font:600 12px system-ui;padding:4px 10px;border-radius:999px}
+@media (max-width:820px){.app{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <h1>Smart CFO</h1><div class="sub">Contabilità · Bilancio · Controllo · Finanza</div>
+  <div class="lbl">Motore IA</div>
+  <div class="box"><b>Google Gemini · piano gratuito</b><span class="muted">Nella demo le risposte sono esempi già pronti, basati sui documenti fittizi.</span></div>
+  <div class="lbl">Analisi rapide</div>
+  <div id="quick"></div>
+</aside>
+<main>
+  <section><h2>Documenti <small>PDF · PNG/JPG · CSV · XLSX — esempi</small></h2><div class="docs" id="docs"></div></section>
+  <section><h2>Richiesta</h2><textarea id="req" placeholder="Scegli un'analisi rapida a sinistra oppure scrivi la richiesta…"></textarea>
+    <div class="row"><span class="muted" id="hint">Ctrl+Invio per inviare</span><button class="btn" id="go">Analizza ▶</button></div></section>
+  <section><div class="row" style="margin:0 0 6px"><h2 style="margin:0">Risposta</h2><span><button class="btn small ghost" id="copy">Copia</button> <button class="btn small ghost" id="exp">Esporta .md</button></span></div><div id="out"></div></section>
+</main>
+</div>
+<div class="tag">DEMO · dati fittizi</div>
+<script>
+const DOCS={
+ bil:{t:'Bilancio 2025 – Esempio S.r.l.',s:'PDF · 12 pagine'},
+ fat:{t:'Fattura n. 418 – Fornitore Alfa',s:'JPG · foto della fattura'},
+ bud:{t:'Budget vs consuntivo Q3 2025',s:'XLSX · 3 fogli'},
+ cf:{t:'Movimenti banca 2025',s:'CSV · 1.240 righe'}
+};
+const Q={
+ bil:{n:'📊  Analisi di bilancio',d:['bil'],p:'Analizza il bilancio: andamento, marginalità, liquidità e punti di attenzione.',a:`## Analisi del bilancio – Esempio S.r.l. (dati fittizi)
+
+| Indicatore | 2025 | 2024 | Variazione |
+|---|---:|---:|---:|
+| Ricavi | 1.240.000 € | 1.085.000 € | +14,3% |
+| EBITDA | 186.000 € | 141.000 € | +31,9% |
+| EBITDA margin | 15,0% | 13,0% | +2,0 pt |
+| Utile netto | 74.500 € | 52.300 € | +42,4% |
+| Posizione finanziaria netta | -210.000 € | -265.000 € | migliora |
+
+### Punti principali
+1. **Crescita sana**: i ricavi aumentano del 14% e la marginalità migliora grazie al calo dei costi per servizi.
+2. **Liquidità**: l'indice corrente passa da 1,18 a 1,34; i giorni medi di incasso scendono da 78 a 64.
+3. **Attenzione**: il magazzino cresce più dei ricavi (+22%): verificare le scorte a lenta rotazione.
+
+> I risultati generati dall'IA vanno sempre verificati prima dell'uso contabile o fiscale.`},
+ pd:{n:'📒  Scritture in partita doppia',d:['fat'],p:'Prepara le scritture contabili della fattura.',a:`## Scritture – Fattura n. 418 del 14/10/2025 (Fornitore Alfa)
+
+| Data | Conto | Dare | Avere |
+|---|---|---:|---:|
+| 14/10/2025 | Merci c/acquisti | 2.500,00 | |
+| 14/10/2025 | IVA ns/credito (22%) | 550,00 | |
+| 14/10/2025 | Debiti v/fornitori – Alfa | | 3.050,00 |
+| 13/11/2025 | Debiti v/fornitori – Alfa | 3.050,00 | |
+| 13/11/2025 | Banca c/c | | 3.050,00 |
+
+### Note
+- Pagamento a 30 giorni data fattura: la seconda scrittura è il saldo previsto.
+- Se la merce è destinata alla rivendita resta in **Merci c/acquisti**; se è un bene strumentale va tra le immobilizzazioni.
+
+> I risultati generati dall'IA vanno sempre verificati prima dell'uso contabile o fiscale.`},
+ fatt:{n:'🧾  Lettura fattura',d:['fat'],p:'Estrai i dati principali della fattura e controlla i calcoli.',a:`## Dati estratti dalla fattura
+
+| Campo | Valore |
+|---|---|
+| Fornitore | Fornitore Alfa S.r.l. (esempio) |
+| Numero e data | 418 del 14/10/2025 |
+| Imponibile | 2.500,00 € |
+| IVA 22% | 550,00 € |
+| Totale | 3.050,00 € |
+| Scadenza | 13/11/2025 – bonifico |
+
+### Controlli
+- ✅ IVA calcolata correttamente (2.500 × 22% = 550).
+- ✅ Totale coerente con imponibile + IVA.
+- ⚠️ Manca il codice destinatario SDI nella foto: verificare che la fattura elettronica sia arrivata dal Sistema di Interscambio.`},
+ bud:{n:'📉  Scostamenti budget/consuntivo',d:['bud'],p:'Confronta budget e consuntivo del terzo trimestre e spiega gli scostamenti.',a:`## Scostamenti Q3 2025
+
+| Voce | Budget | Consuntivo | Scostamento |
+|---|---:|---:|---:|
+| Ricavi | 310.000 € | 296.500 € | -4,4% |
+| Costo del venduto | 186.000 € | 171.900 € | -7,6% |
+| Personale | 62.000 € | 63.800 € | +2,9% |
+| Marketing | 18.000 € | 24.600 € | **+36,7%** |
+| EBITDA | 44.000 € | 36.200 € | -17,7% |
+
+### Lettura
+1. Ricavi sotto budget per il ritardo del lancio della linea autunno (spostato a ottobre).
+2. Il costo del venduto scende più dei ricavi: **margine lordo in miglioramento** (42,0% contro 40,0%).
+3. Il marketing è l'unica voce fuori controllo: campagne anticipate per il lancio. Rivedere il budget di Q4.`},
+ be:{n:'⚖️  Break-even point',d:['bil'],p:'Calcola il punto di pareggio e il margine di sicurezza.',a:`## Break-even point
+
+| Dato | Valore |
+|---|---:|
+| Costi fissi annui | 412.000 € |
+| Margine di contribuzione | 38,0% dei ricavi |
+| **Fatturato di pareggio** | **1.084.000 €** |
+| Ricavi 2025 | 1.240.000 € |
+| Margine di sicurezza | 12,6% |
+
+Con il 12,6% di margine di sicurezza l'azienda resta in utile anche con un calo dei ricavi di circa 156.000 €. Ogni punto di margine di contribuzione in più abbassa il pareggio di circa 28.000 €.`},
+ cf:{n:'💧  Rendiconto finanziario',d:['cf','bil'],p:'Ricostruisci il rendiconto finanziario dai movimenti di banca.',a:`## Rendiconto finanziario 2025 (metodo indiretto, sintesi)
+
+| Flusso | Importo |
+|---|---:|
+| Utile netto | 74.500 € |
+| Ammortamenti | 38.000 € |
+| Variazione crediti | +21.000 € |
+| Variazione magazzino | -46.000 € |
+| **Flusso della gestione operativa** | **87.500 €** |
+| Investimenti (macchinari) | -40.000 € |
+| Rimborso finanziamenti | -25.000 € |
+| **Variazione di liquidità** | **+22.500 €** |
+
+Il magazzino assorbe gran parte della cassa generata: riducendo le scorte di 30 giorni si libererebbero circa 35.000 €.`},
+ ind:{n:'📐  Indicatori finanziari',d:['bil'],p:'Calcola i principali indici di bilancio.',a:`## Indicatori 2025
+
+| Indice | Valore | Lettura |
+|---|---:|---|
+| ROE | 14,2% | buono |
+| ROI | 11,8% | buono |
+| ROS | 9,6% | in miglioramento |
+| Indice corrente | 1,34 | adeguato |
+| Indice secco (quick ratio) | 0,86 | da migliorare |
+| Debt / Equity | 0,92 | equilibrato |
+| Giorni medi incasso | 64 | in calo |
+
+Il quick ratio sotto 1 conferma che la liquidità dipende dal magazzino.`}
+};
+const $=s=>document.querySelector(s);let sel=new Set(['bil']),cur='bil',last='';
+$('#docs').innerHTML=Object.entries(DOCS).map(([k,d])=>`<button class="doc" data-k="${k}">📄 ${d.t}<small>${d.s}</small></button>`).join('');
+$('#quick').innerHTML=Object.entries(Q).map(([k,q])=>`<button class="qa" data-k="${k}">${q.n}</button>`).join('');
+function paint(){document.querySelectorAll('.doc').forEach(b=>b.classList.toggle('on',sel.has(b.dataset.k)));document.querySelectorAll('.qa').forEach(b=>b.classList.toggle('on',b.dataset.k===cur))}
+document.querySelectorAll('.doc').forEach(b=>b.onclick=()=>{sel.has(b.dataset.k)?sel.delete(b.dataset.k):sel.add(b.dataset.k);paint()});
+document.querySelectorAll('.qa').forEach(b=>b.onclick=()=>{cur=b.dataset.k;sel=new Set(Q[cur].d);$('#req').value=Q[cur].p;paint()});
+function md(t){const L=t.split('\n');let h='',i=0;const inl=s=>s.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+ while(i<L.length){const l=L[i];
+  if(l.startsWith('|')){const rows=[];while(i<L.length&&L[i].startsWith('|'))rows.push(L[i++]);if(rows.length<2){h+=`<p>${inl(rows[0])}</p>`;continue}const al=rows[1].split('|').slice(1,-1).map(c=>c.trim().endsWith(':'));const cell=(r,tag)=>r.split('|').slice(1,-1).map((c,j)=>`<${tag}${al[j]?' class="n"':''}>${inl(c.trim())}</${tag}>`).join('');h+=`<table><tr>${cell(rows[0],'th')}</tr>${rows.slice(2).map(r=>`<tr>${cell(r,'td')}</tr>`).join('')}</table>`;continue}
+  if(/^\d+\. /.test(l)){h+='<ol>';while(i<L.length&&/^\d+\. /.test(L[i]))h+=`<li>${inl(L[i++].replace(/^\d+\. /,''))}</li>`;h+='</ol>';continue}
+  if(l.startsWith('- ')){h+='<ul>';while(i<L.length&&L[i].startsWith('- '))h+=`<li>${inl(L[i++].slice(2))}</li>`;h+='</ul>';continue}
+  if(l.startsWith('### '))h+=`<h3>${inl(l.slice(4))}</h3>`;else if(l.startsWith('## '))h+=`<h2>${inl(l.slice(3))}</h2>`;else if(l.startsWith('> '))h+=`<blockquote>${inl(l.slice(2))}</blockquote>`;else if(l.trim())h+=`<p>${inl(l)}</p>`;i++}
+ return h}
+function welcome(){$('#out').innerHTML=md(`## Benvenuto nella demo di Smart CFO Assistant\n\n1. Scegli un'**analisi rapida** a sinistra (i documenti d'esempio giusti si selezionano da soli).\n2. Premi **Analizza**: la risposta arriva un pezzo alla volta, come nell'app.\n3. Prova a cambiare analisi o documenti.\n\n> Tutti i documenti e i numeri della demo sono inventati.`)}
+function pick(){const t=$('#req').value.toLowerCase();if(Q[cur]&&t===Q[cur].p.toLowerCase())return cur;
+ const kw=[['pd',/partita|scrittur|registra/],['fatt',/fattur|estra/],['bud',/budget|scostam|consuntiv/],['be',/pareggio|break/],['cf',/rendiconto|fluss|cassa|banca/],['ind',/indic|roe|roi|ratio/],['bil',/bilanc|analizz/]];
+ for(const [k,r] of kw)if(r.test(t))return k;return null}
+$('#go').onclick=async()=>{const k=pick();if(!sel.size){$('#out').innerHTML=md('Aggiungi almeno un documento d\'esempio.');return}
+ if(!k){$('#out').innerHTML=md(`Nella demo posso rispondere alle analisi rapide (bilancio, scritture, fattura, budget, break-even, rendiconto, indicatori). Nella versione completa Gemini risponde a qualsiasi richiesta sui documenti caricati.`);return}
+ cur=k;paint();const text=Q[k].a;last=text;$('#go').disabled=true;$('#hint').textContent='Analisi in corso…';
+ for(let i=0;i<=text.length;i+=Math.max(6,Math.round(text.length/90))){$('#out').innerHTML=md(text.slice(0,i));await new Promise(r=>setTimeout(r,25))}
+ $('#out').innerHTML=md(text);$('#go').disabled=false;$('#hint').textContent='Fatto · Ctrl+Invio per inviare'};
+$('#req').onkeydown=e=>{if(e.ctrlKey&&e.key==='Enter')$('#go').click()};
+$('#copy').onclick=()=>navigator.clipboard&&navigator.clipboard.writeText(last);
+$('#exp').onclick=()=>{if(!last)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([last],{type:'text/markdown'}));a.download='analisi-smart-cfo.md';a.click()};
+$('#req').value=Q.bil.p;paint();welcome();
+</script>
+</body>
+</html>
