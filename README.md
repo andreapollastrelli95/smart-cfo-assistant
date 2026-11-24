@@ -18,28 +18,7 @@ Assistente desktop per contabilità, bilancio, controllo di gestione e finanza: 
 - **Privacy**: avviso prima di inviare documenti; la chiave API si legge solo dalla variabile d'ambiente `GEMINI_API_KEY` e non viene mai salvata.
 - Tema chiaro, scuro o di sistema.
 
-## Come è fatto
-
-| File | Ruolo |
-|---|---|
-| `main.py` | Interfaccia **CustomTkinter**: documenti, richiesta, risposta, stato; lavoro in background con coda di eventi |
-| `ai_client.py` | Chiamate a **Google Gemini** (SDK `google-genai`) in streaming, con modello di riserva e gestione degli errori |
-| `ai_config.py` | Modello, limiti e tempi: unico punto da modificare |
-| `document_loader.py` | Lettura di PDF (`pypdf`), immagini, CSV ed Excel (`pandas`) |
-| `markdown_render.py` | Rendering della risposta in HTML (`markdown`, `tkinterweb`) e esportazioni |
-| `config_manager.py` | Preferenze dell'utente (tema) |
-
-## Avviarlo
-
-```powershell
-python -m venv .venv
-.venv\Scripts\python -m pip install -r requirements.txt
-setx GEMINI_API_KEY "la-tua-chiave"     # chiave gratuita da aistudio.google.com/apikey
-.venv\Scripts\python main.py            # oppure doppio clic su run.bat
-```
 
 > I risultati generati dall'AI vanno sempre verificati prima dell'uso contabile o fiscale.
-
----
 
 Progetto di [Andrea Pollastrelli](https://andreapollastrelli95.github.io/).
