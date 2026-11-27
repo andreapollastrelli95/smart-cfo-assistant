@@ -7,7 +7,6 @@ Assistente desktop per contabilità, bilancio, controllo di gestione e finanza: 
 ![Analisi degli scostamenti nella demo](docs/demo-1.png)
 
 ![Smart CFO Assistant](docs/screenshot-1.png)
-*Esempio di risposta con dati fittizi.*
 
 ## Cosa fa
 
@@ -17,8 +16,5 @@ Assistente desktop per contabilità, bilancio, controllo di gestione e finanza: 
 - **Uso attento della quota gratuita**: modello di riserva se il principale è al limite, pochi tentativi solo per errori temporanei, timeout per operazione.
 - **Privacy**: avviso prima di inviare documenti; la chiave API si legge solo dalla variabile d'ambiente `GEMINI_API_KEY` e non viene mai salvata.
 - Tema chiaro, scuro o di sistema.
-
-
-> I risultati generati dall'AI vanno sempre verificati prima dell'uso contabile o fiscale.
 
 Progetto di [Andrea Pollastrelli](https://andreapollastrelli95.github.io/).
